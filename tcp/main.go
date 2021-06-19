@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/binary"
 	"io"
 	"net"
 	"os"
@@ -29,26 +30,34 @@ import (
 */
 
 type Header struct {
-	SourcePort      uint16
-	DestinationPort uint16
-	SequenceNumber  uint32
-	Acknowledgment  uint32
-	ControlBits     uint16
-	Window          uint16
-	Checksum        uint16
-	UrgentPointer   uint16
-	Options         uint32
+	SourcePort            uint16
+	DestinationPort       uint16
+	SequenceNumber        uint32
+	Acknowledgment        uint32
+	DataOffsetControlBits uint16
+	Window                uint16
+	Checksum              uint16
+	UrgentPointer         uint16
+	Options               uint32
+}
+
+//func (h *Header) SetControlBits(c ControlBit) {
+//	h.DataOffsetControlBits =
+//}
+
+func (h *Header) Write(w io.Writer) error {
+	return binary.Write(w, binary.LittleEndian, h)
 }
 
 type ControlBit uint8
 
 const (
-	URG ControlBit = 1 << iota
-	ACK
-	PSH
-	RST
+	FIN ControlBit = 1 << iota
 	SYN
-	FIN
+	RST
+	PSH
+	ACK
+	URG
 )
 
 func main() {
