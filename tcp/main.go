@@ -78,6 +78,18 @@ func Ping(addr string) error {
 	}
 	defer conn.Close()
 
+	h := &Header{
+		SourcePort        : 49443,
+	DestinationPort       : 8080,
+	SequenceNumber        : 0,
+	Acknowledgment        : ,
+	DataOffsetControlBits : ,
+	Window                : ,
+	Checksum              : ,
+	UrgentPointer         : ,
+	Options               : ,
+	}
+
 	_, err = io.Copy(os.Stdout, conn)
 	if err != nil && err != io.EOF {
 		return err
