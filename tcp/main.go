@@ -7,6 +7,8 @@ import (
 	"os"
 )
 
+// https://play.golang.org/p/p7TwQleOGA3
+
 /*
     0                   1                   2                   3
     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -41,18 +43,20 @@ type Header struct {
 	Options               uint32
 }
 
-//func (h *Header) SetControlBits(c ControlBit) {
-//	h.DataOffsetControlBits =
-//}
+func (h *Header) DataOffset() uint16 {
+	return h.DataOffsetControlBits >> 12
+}
+
+func (h *Header) SetDataOffset() {
+	h.DataOffsetControlBits = h.DataOffsetControlBits&0x0fff | 0x8000
+}
 
 func (h *Header) Write(w io.Writer) error {
 	return binary.Write(w, binary.LittleEndian, h)
 }
 
-type ControlBit uint8
-
 const (
-	FIN ControlBit = 1 << iota
+	FIN uint16 = 1 << iota
 	SYN
 	RST
 	PSH
