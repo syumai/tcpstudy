@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/binary"
 	"io"
 	"net"
@@ -64,6 +65,24 @@ const (
 	URG
 )
 
+const ISN uint32 = 123456
+
+//+--------+--------+--------+--------+
+//|           Source Address          |
+//+--------+--------+--------+--------+
+//|         Destination Address       |
+//+--------+--------+--------+--------+
+//|  zero  |  PTCL  |    TCP Length   |
+//+--------+--------+--------+--------+
+
+type PseudoHeader struct {
+	SourceAddress      uint32
+	DestinationAddress uint32
+	_                  uint8
+	PTCL               uint8
+	TCPLength          uint16
+}
+
 func main() {
 	err := Ping("127.0.0.1")
 	if err != nil {
@@ -78,16 +97,27 @@ func Ping(addr string) error {
 	}
 	defer conn.Close()
 
+	ph := &PseudoHeader{
+		PTCL:      6, // tcp
+		TCPLength: 8, // TODO: temporary value
+	}
+
+	b := bytes.NewReader([]byte(net.ParseIP("127.0.0.1")))
+	if err := binary.Read(b, binary.BigEndian, &ph.SourceAddress); err != nil {
+		return err
+	}
+	ph.DestinationAddress = ph.SourceAddress
+
 	h := &Header{
-		SourcePort        : 49443,
-	DestinationPort       : 8080,
-	SequenceNumber        : 0,
-	Acknowledgment        : ,
-	DataOffsetControlBits : ,
-	Window                : ,
-	Checksum              : ,
-	UrgentPointer         : ,
-	Options               : ,
+		SourcePort:            49443,
+		DestinationPort:       8080,
+		SequenceNumber:        ISN + 0,
+		Acknowledgment:        0,
+		DataOffsetControlBits: SYN,
+		Window:                65535, // temporary value
+		//Checksum              : ,
+		//UrgentPointer         : ,
+		//Options               : ,
 	}
 
 	_, err = io.Copy(os.Stdout, conn)
