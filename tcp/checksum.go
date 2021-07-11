@@ -52,6 +52,12 @@ func CalculateChecksum(ph *PseudoHeader, h *Header, data []byte) (uint16, error)
 		if err != nil {
 			return 0, err
 		}
-		sum += i
+		sum = sumOfOnesComplements(sum, ^i)
 	}
+	return ^sum, nil
+}
+
+func sumOfOnesComplements(a, b uint16) uint16 {
+	sum := uint32(a) + uint32(b)
+	return uint16(sum + sum>>16) // add overflowed bit and trim to 16bits
 }
