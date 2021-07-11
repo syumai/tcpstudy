@@ -23,11 +23,12 @@ type PseudoHeader struct {
 	TCPLength          uint16
 }
 
-func CalculateChecksum(ph *PseudoHeader, h *Header, data []byte) (uint16, error) {
+func CalculateChecksum(ph *PseudoHeader, h Header, data []byte) (uint16, error) {
 	var buf bytes.Buffer
 	if err := binary.Write(&buf, binary.BigEndian, ph); err != nil {
 		return 0, err
 	}
+	h.Checksum = 0
 	if err := binary.Write(&buf, binary.BigEndian, h); err != nil {
 		return 0, err
 	}
