@@ -3,11 +3,11 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
-	"fmt"
 	"io"
 	"math"
 	"net"
 	"os"
+	"syscall"
 	"unsafe"
 
 	"github.com/syumai/tcpstudy/tcp"
@@ -27,11 +27,19 @@ const ProtocolNumberTCP = 6
 const ISN uint32 = 123456
 
 func Ping(addr string) error {
-	conn, err := net.Dial(fmt.Sprintf("ip4:%d", ProtocolNumberTCP), addr)
+	sockFD, err := syscall.Socket(syscall.AF_INET, syscall.SOCK_RAW, ProtocolNumberTCP)
 	if err != nil {
 		return err
 	}
-	defer conn.Close()
+	defer syscall.Close(sockFD)
+
+	sockAddr := syscall.SockaddrInet4{
+		Port: 56789,
+		Addr: [4]byte{}, // zero value
+	}
+	if err := syscall.Bind(sockFD, sockAddr); err != nil {
+		return err
+	}
 
 	ph := &tcp.PseudoHeader{
 		PTCL:      ProtocolNumberTCP, // tcp
@@ -51,9 +59,9 @@ func Ping(addr string) error {
 		Acknowledgment:        0,
 		DataOffsetControlBits: tcp.SYN,
 		Window:                math.MaxUint16, // temporary value
-		//Checksum              : ,
-		//UrgentPointer         : ,
-		//Options               : ,
+		Checksum:              0,
+		UrgentPointer:         0,
+		Options:               0,
 	}
 
 	_, err = io.Copy(os.Stdout, conn)
