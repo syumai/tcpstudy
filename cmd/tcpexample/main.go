@@ -7,7 +7,6 @@ import (
 	"math"
 	"net"
 	"os"
-	"syscall"
 	"unsafe"
 
 	"github.com/syumai/tcpstudy/tcp"
@@ -22,27 +21,12 @@ func main() {
 	}
 }
 
-const ProtocolNumberTCP = 6
-
 const ISN uint32 = 123456
 
 func Ping(addr string) error {
-	sockFD, err := syscall.Socket(syscall.AF_INET, syscall.SOCK_RAW, ProtocolNumberTCP)
-	if err != nil {
-		return err
-	}
-	defer syscall.Close(sockFD)
-
-	sockAddr := syscall.SockaddrInet4{
-		Port: 56789,
-		Addr: [4]byte{}, // zero value
-	}
-	if err := syscall.Bind(sockFD, sockAddr); err != nil {
-		return err
-	}
-
+	conn, sourcePort, err := tcp.Dial()
 	ph := &tcp.PseudoHeader{
-		PTCL:      ProtocolNumberTCP, // tcp
+		PTCL:      tcp.ProtocolNumberTCP, // tcp
 		TCPLength: uint16(unsafe.Sizeof(tcp.Header{})),
 	}
 
